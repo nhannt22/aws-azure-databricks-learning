@@ -10,6 +10,11 @@ client_secret        = dbutils.secrets.get(scope="formula1-scope", key="formula1
 
 # COMMAND ----------
 
+storage_account_name = "formula1dlnt"
+client_id            = dbutils.secrets.get(scope="formula1-scope", key="formula1-app-client-id")
+tenant_id            = dbutils.secrets.get(scope="formula1-scope", key="formula1-app-tenant-id")
+client_secret        = dbutils.secrets.get(scope="formula1-scope", key="formula1-app-client-secret")a
+
 configs = {
   "fs.azure.account.auth.type": "OAuth",
   "fs.azure.account.oauth.provider.type": "org.apache.hadoop.fs.azurebfs.oauth2.ClientCredsTokenProvider",
