@@ -4,6 +4,8 @@ v_file_date = dbutils.widgets.get("p_file_date")
 
 # COMMAND ----------
 
+table_uri = "abfss://presentation@formula1dlnt.dfs.core.windows.net/calculated_race_results"
+
 spark.sql(f"""
               CREATE TABLE IF NOT EXISTS f1_presentation.calculated_race_results
               (
@@ -19,6 +21,7 @@ spark.sql(f"""
               updated_date TIMESTAMP
               )
               USING DELTA
+              LOCATION "{table_uri}"
 """)
 
 # COMMAND ----------

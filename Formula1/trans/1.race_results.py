@@ -17,6 +17,10 @@ v_file_date = dbutils.widgets.get("p_file_date")
 
 # COMMAND ----------
 
+processed_folder_path
+
+# COMMAND ----------
+
 drivers_df = spark.read.format("delta").load(f"{processed_folder_path}/drivers") \
 .withColumnRenamed("number", "driver_number") \
 .withColumnRenamed("name", "driver_name") \
@@ -80,8 +84,21 @@ final_df = race_results_df.select("race_id", "race_year", "race_name", "race_dat
 
 # COMMAND ----------
 
+display(final_df)
+
+# COMMAND ----------
+
+presentation_folder_path = 'abfss://presentation@formula1dlnt.dfs.core.windows.net'
+
+# COMMAND ----------
+
 merge_condition = "tgt.driver_name = src.driver_name AND tgt.race_id = src.race_id"
 merge_delta_data(final_df, 'f1_presentation', 'race_results', presentation_folder_path, merge_condition, 'race_id')
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC DESCRIBE EXTENDED f1_presentation.race_results;
 
 # COMMAND ----------
 

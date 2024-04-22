@@ -138,7 +138,7 @@ spark.sql(sql_command)
 
 # COMMAND ----------
 
-circuits_final_df.write.mode("append").format("delta").option("mergeSchema", "true").saveAsTable("nhan_databricks.f1_processed.circuits")
+circuits_final_df.write.mode("overwrite").format("delta").option("mergeSchema", "true").option("overwriteSchema", "true").saveAsTable("nhan_databricks.f1_processed.circuits")
 
 # COMMAND ----------
 

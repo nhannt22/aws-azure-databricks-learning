@@ -98,7 +98,29 @@ drivers_final_df = drivers_with_columns_df.drop(col("url"))
 
 # COMMAND ----------
 
-drivers_final_df.write.mode("overwrite").format("delta").saveAsTable("f1_processed.drivers")
+table_uri = "abfss://processed@formula1dlnt.dfs.core.windows.net/drivers"
+
+sql_command = f"""
+CREATE TABLE IF NOT EXISTS nhan_databricks.f1_processed.drivers (
+    cardReferenceID string,
+    modifiedDate TIMESTAMP,
+    createdDate TIMESTAMP,
+    clientCode string,
+    processorCode string
+)
+USING DELTA
+LOCATION "{table_uri}"
+TBLPROPERTIES (
+    delta.enableChangeDataFeed = true, 
+    spark.databricks.delta.schema.autoMerge.enabled = true
+);
+"""
+
+spark.sql(sql_command)
+
+# COMMAND ----------
+
+drivers_final_df.write.mode("overwrite").format("delta").option("mergeSchema", "true").option("overwriteSchema", "true").saveAsTable("f1_processed.drivers")
 
 # COMMAND ----------
 

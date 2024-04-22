@@ -136,6 +136,32 @@ results_deduped_df = results_final_df.dropDuplicates(['race_id', 'driver_id'])
 
 # COMMAND ----------
 
+# table_uri = "abfss://processed@formula1dlnt.dfs.core.windows.net/results"
+
+# sql_command = f"""
+# CREATE TABLE IF NOT EXISTS nhan_databricks.f1_processed.results (
+#     cardReferenceID string,
+#     modifiedDate TIMESTAMP,
+#     createdDate TIMESTAMP,
+#     clientCode string,
+#     processorCode string
+# )
+# USING DELTA
+# LOCATION "{table_uri}"
+# TBLPROPERTIES (
+#     delta.enableChangeDataFeed = true, 
+#     spark.databricks.delta.schema.autoMerge.enabled = true
+# );
+# """
+
+# spark.sql(sql_command)
+
+# COMMAND ----------
+
+processed_folder_path = 'abfss://processed@formula1dlnt.dfs.core.windows.net'
+
+# COMMAND ----------
+
 merge_condition = "tgt.result_id = src.result_id AND tgt.race_id = src.race_id"
 merge_delta_data(results_deduped_df, 'f1_processed', 'results', processed_folder_path, merge_condition, 'race_id')
 

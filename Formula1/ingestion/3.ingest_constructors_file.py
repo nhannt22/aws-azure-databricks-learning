@@ -75,7 +75,29 @@ constructor_final_df = add_ingestion_date(constructor_renamed_df)
 
 # COMMAND ----------
 
-constructor_final_df.write.mode("overwrite").format("delta").saveAsTable("f1_processed.constructors")
+table_uri = "abfss://processed@formula1dlnt.dfs.core.windows.net/constructors"
+
+sql_command = f"""
+CREATE TABLE IF NOT EXISTS nhan_databricks.f1_processed.constructors (
+    cardReferenceID string,
+    modifiedDate TIMESTAMP,
+    createdDate TIMESTAMP,
+    clientCode string,
+    processorCode string
+)
+USING DELTA
+LOCATION "{table_uri}"
+TBLPROPERTIES (
+    delta.enableChangeDataFeed = true, 
+    spark.databricks.delta.schema.autoMerge.enabled = true
+);
+"""
+
+spark.sql(sql_command)
+
+# COMMAND ----------
+
+constructor_final_df.write.mode("overwrite").option("mergeSchema", "true").option("overwriteSchema", "true").format("delta").saveAsTable("f1_processed.constructors")
 
 # COMMAND ----------
 

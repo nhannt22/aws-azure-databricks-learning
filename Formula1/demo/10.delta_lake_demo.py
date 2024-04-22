@@ -9,17 +9,41 @@
 
 # MAGIC %sql
 # MAGIC CREATE DATABASE IF NOT EXISTS f1_demo
-# MAGIC LOCATION '/mnt/formula1dl/demo'
+# MAGIC MANAGED LOCATION 'abfss://demo@formula1dlnt.dfs.core.windows.net'
 
 # COMMAND ----------
 
 results_df = spark.read \
-.option("inferSchema", True) \
-.json("/mnt/formula1dl/raw/2021-03-28/results.json")
+  .option("inferSchema", True) \
+  .json("/mnt/formula1dlnt/raw/2021-03-28/results.json")
 
 # COMMAND ----------
 
-results_df.write.format("delta").mode("overwrite").saveAsTable("f1_demo.results_managed")
+display(results_df)
+
+# COMMAND ----------
+
+table_uri = "abfss://demo@formula1dlnt.dfs.core.windows.net/results_managed"
+
+sql_command = f"""
+CREATE TABLE IF NOT EXISTS nhan_databricks.f1_demo.results_managed (
+    cardReferenceID string,
+    modifiedDate TIMESTAMP,
+    createdDate TIMESTAMP,
+    clientCode string,
+    processorCode string
+)
+USING DELTA
+LOCATION "{table_uri}"
+TBLPROPERTIES (
+    delta.enableChangeDataFeed = true, 
+    spark.databricks.delta.schema.autoMerge.enabled = true
+);
+"""
+
+spark.sql(sql_command)
+
+results_df.write.format("delta").mode("overwrite").option("mergeSchema", "true").option("overwriteSchema", "true").saveAsTable("f1_demo.results_managed")
 
 # COMMAND ----------
 
@@ -28,14 +52,14 @@ results_df.write.format("delta").mode("overwrite").saveAsTable("f1_demo.results_
 
 # COMMAND ----------
 
-results_df.write.format("delta").mode("overwrite").save("/mnt/formula1dl/demo/results_external")
+results_df.write.format("delta").mode("overwrite").save("/mnt/formula1dlnt/demo/results_external")
 
 # COMMAND ----------
 
 # MAGIC %sql
 # MAGIC CREATE TABLE f1_demo.results_external
 # MAGIC USING DELTA
-# MAGIC LOCATION '/mnt/formula1dl/demo/results_external'
+# MAGIC LOCATION 'abfss://demo@formula1dlnt.dfs.core.windows.net/results_external'
 
 # COMMAND ----------
 
@@ -44,7 +68,7 @@ results_df.write.format("delta").mode("overwrite").save("/mnt/formula1dl/demo/re
 
 # COMMAND ----------
 
-results_external_df = spark.read.format("delta").load("/mnt/formula1dl/demo/results_external")
+results_external_df = spark.read.format("delta").load("/mnt/formula1dlnt/demo/results_external")
 
 # COMMAND ----------
 
@@ -52,7 +76,14 @@ display(results_external_df)
 
 # COMMAND ----------
 
-results_df.write.format("delta").mode("overwrite").partitionBy("constructorId").saveAsTable("f1_demo.results_partitioned")
+# MAGIC %sql
+# MAGIC CREATE TABLE f1_demo.results_partitioned
+# MAGIC USING DELTA
+# MAGIC LOCATION 'abfss://demo@formula1dlnt.dfs.core.windows.net/results_partitioned'
+
+# COMMAND ----------
+
+results_df.write.format("delta").mode("overwrite").partitionBy("constructorId").option("mergeSchema", "true").option("overwriteSchema", "true").saveAsTable("f1_demo.results_partitioned")
 
 # COMMAND ----------
 
@@ -74,7 +105,7 @@ results_df.write.format("delta").mode("overwrite").partitionBy("constructorId").
 
 # MAGIC %sql
 # MAGIC UPDATE f1_demo.results_managed
-# MAGIC   SET points = 11 - position
+# MAGIC SET points = 11 - position
 # MAGIC WHERE position <= 10
 
 # COMMAND ----------
@@ -86,9 +117,9 @@ results_df.write.format("delta").mode("overwrite").partitionBy("constructorId").
 
 from delta.tables import DeltaTable
 
-deltaTable = DeltaTable.forPath(spark, "/mnt/formula1dl/demo/results_managed")
+deltaTable = DeltaTable.forPath(spark, "/mnt/formula1dlnt/demo/results_managed")
 
-deltaTable.update("position <= 10", { "points": "21 - position" } ) 
+deltaTable.update("position <= 10", { "points": "100 - position" } ) 
 
 # COMMAND ----------
 
@@ -110,7 +141,7 @@ deltaTable.update("position <= 10", { "points": "21 - position" } )
 
 from delta.tables import DeltaTable
 
-deltaTable = DeltaTable.forPath(spark, "/mnt/formula1dl/demo/results_managed")
+deltaTable = DeltaTable.forPath(spark, "/mnt/formula1dlnt/demo/results_managed")
 
 deltaTable.delete("points = 0") 
 
@@ -127,10 +158,10 @@ deltaTable.delete("points = 0")
 # COMMAND ----------
 
 drivers_day1_df = spark.read \
-.option("inferSchema", True) \
-.json("/mnt/formula1dl/raw/2021-03-28/drivers.json") \
-.filter("driverId <= 10") \
-.select("driverId", "dob", "name.forename", "name.surname")
+  .option("inferSchema", True) \
+  .json("/mnt/formula1dlnt/raw/2021-03-28/drivers.json") \
+  .filter("driverId <= 10") \
+  .select("driverId", "dob", "name.forename", "name.surname")
 
 # COMMAND ----------
 
@@ -145,10 +176,10 @@ drivers_day1_df.createOrReplaceTempView("drivers_day1")
 from pyspark.sql.functions import upper
 
 drivers_day2_df = spark.read \
-.option("inferSchema", True) \
-.json("/mnt/formula1dl/raw/2021-03-28/drivers.json") \
-.filter("driverId BETWEEN 6 AND 15") \
-.select("driverId", "dob", upper("name.forename").alias("forename"), upper("name.surname").alias("surname"))
+  .option("inferSchema", True) \
+  .json("/mnt/formula1dlnt/raw/2021-03-28/drivers.json") \
+  .filter("driverId BETWEEN 6 AND 15") \
+  .select("driverId", "dob", upper("name.forename").alias("forename"), upper("name.surname").alias("surname"))
 
 # COMMAND ----------
 
@@ -163,23 +194,28 @@ display(drivers_day2_df)
 from pyspark.sql.functions import upper
 
 drivers_day3_df = spark.read \
-.option("inferSchema", True) \
-.json("/mnt/formula1dl/raw/2021-03-28/drivers.json") \
-.filter("driverId BETWEEN 1 AND 5 OR driverId BETWEEN 16 AND 20") \
-.select("driverId", "dob", upper("name.forename").alias("forename"), upper("name.surname").alias("surname"))
+  .option("inferSchema", True) \
+  .json("/mnt/formula1dlnt/raw/2021-03-28/drivers.json") \
+  .filter("driverId BETWEEN 1 AND 5 OR driverId BETWEEN 16 AND 20") \
+  .select("driverId", "dob", upper("name.forename").alias("forename"), upper("name.surname").alias("surname"))
+
+# COMMAND ----------
+
+display(drivers_day3_df)
 
 # COMMAND ----------
 
 # MAGIC %sql
 # MAGIC CREATE TABLE IF NOT EXISTS f1_demo.drivers_merge (
-# MAGIC driverId INT,
-# MAGIC dob DATE,
-# MAGIC forename STRING, 
-# MAGIC surname STRING,
-# MAGIC createdDate DATE, 
-# MAGIC updatedDate DATE
+# MAGIC   driverId INT,
+# MAGIC   dob DATE,
+# MAGIC   forename STRING, 
+# MAGIC   surname STRING,
+# MAGIC   createdDate DATE, 
+# MAGIC   updatedDate DATE
 # MAGIC )
 # MAGIC USING DELTA
+# MAGIC LOCATION "abfss://demo@formula1dlnt.dfs.core.windows.net/drivers_merge"
 
 # COMMAND ----------
 

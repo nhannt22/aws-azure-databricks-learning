@@ -55,6 +55,10 @@ final_df = constructor_standings_df.withColumn("rank", rank().over(constructor_r
 
 # COMMAND ----------
 
+presentation_folder_path = 'abfss://presentation@formula1dlnt.dfs.core.windows.net'
+
+# COMMAND ----------
+
 merge_condition = "tgt.team = src.team AND tgt.race_year = src.race_year"
 merge_delta_data(final_df, 'f1_presentation', 'constructor_standings', presentation_folder_path, merge_condition, 'race_year')
 

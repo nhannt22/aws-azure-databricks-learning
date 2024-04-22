@@ -55,6 +55,10 @@ final_df = driver_standings_df.withColumn("rank", rank().over(driver_rank_spec))
 
 # COMMAND ----------
 
+presentation_folder_path = 'abfss://presentation@formula1dlnt.dfs.core.windows.net'
+
+# COMMAND ----------
+
 merge_condition = "tgt.driver_name = src.driver_name AND tgt.race_year = src.race_year"
 merge_delta_data(final_df, 'f1_presentation', 'driver_standings', presentation_folder_path, merge_condition, 'race_year')
 

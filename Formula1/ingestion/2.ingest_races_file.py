@@ -84,7 +84,34 @@ races_selected_df = races_with_ingestion_date_df.select(col('raceId').alias('rac
 
 # COMMAND ----------
 
-races_selected_df.write.mode("overwrite").partitionBy('race_year').format("delta").saveAsTable("f1_processed.races")
+table_uri = "abfss://processed@formula1dlnt.dfs.core.windows.net/races"
+
+sql_command = f"""
+CREATE TABLE IF NOT EXISTS nhan_databricks.f1_processed.races (
+    cardReferenceID string,
+    modifiedDate TIMESTAMP,
+    createdDate TIMESTAMP,
+    clientCode string,
+    processorCode string
+)
+USING DELTA
+LOCATION "{table_uri}"
+TBLPROPERTIES (
+    delta.enableChangeDataFeed = true, 
+    spark.databricks.delta.schema.autoMerge.enabled = true
+);
+"""
+
+spark.sql(sql_command)
+
+# COMMAND ----------
+
+races_selected_df.write.mode("overwrite") \
+    .partitionBy('race_year') \
+    .format("delta") \
+    .option("mergeSchema", "true") \
+    .option("overwriteSchema", "true") \
+    .saveAsTable("f1_processed.races")
 
 # COMMAND ----------
 

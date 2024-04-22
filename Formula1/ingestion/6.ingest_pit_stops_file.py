@@ -81,6 +81,10 @@ final_df = pit_stops_with_ingestion_date_df.withColumnRenamed("driverId", "drive
 
 # COMMAND ----------
 
+processed_folder_path = 'abfss://processed@formula1dlnt.dfs.core.windows.net'
+
+# COMMAND ----------
+
 merge_condition = "tgt.race_id = src.race_id AND tgt.driver_id = src.driver_id AND tgt.stop = src.stop AND tgt.race_id = src.race_id"
 merge_delta_data(final_df, 'f1_processed', 'pit_stops', processed_folder_path, merge_condition, 'race_id')
 
