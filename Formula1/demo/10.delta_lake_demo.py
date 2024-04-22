@@ -237,7 +237,8 @@ display(drivers_day3_df)
 
 # COMMAND ----------
 
-# MAGIC %sql SELECT * FROM f1_demo.drivers_merge;
+# MAGIC %sql
+# MAGIC SELECT * FROM f1_demo.drivers_merge;
 
 # COMMAND ----------
 
@@ -260,7 +261,8 @@ display(drivers_day3_df)
 
 # COMMAND ----------
 
-# MAGIC %sql SELECT * FROM f1_demo.drivers_merge;
+# MAGIC %sql
+# MAGIC SELECT * FROM f1_demo.drivers_merge;
 
 # COMMAND ----------
 
@@ -272,7 +274,7 @@ display(drivers_day3_df)
 from pyspark.sql.functions import current_timestamp
 from delta.tables import DeltaTable
 
-deltaTable = DeltaTable.forPath(spark, "/mnt/formula1dl/demo/drivers_merge")
+deltaTable = DeltaTable.forPath(spark, "/mnt/formula1dlnt/demo/drivers_merge")
 
 deltaTable.alias("tgt").merge(
     drivers_day3_df.alias("upd"),
@@ -291,7 +293,8 @@ deltaTable.alias("tgt").merge(
 
 # COMMAND ----------
 
-# MAGIC %sql SELECT * FROM f1_demo.drivers_merge;
+# MAGIC %sql
+# MAGIC SELECT * FROM f1_demo.drivers_merge;
 
 # COMMAND ----------
 
