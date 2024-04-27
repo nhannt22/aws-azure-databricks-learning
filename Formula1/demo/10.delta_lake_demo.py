@@ -316,11 +316,11 @@ deltaTable.alias("tgt").merge(
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC SELECT * FROM f1_demo.drivers_merge TIMESTAMP AS OF '2021-06-23T15:40:33.000+0000';
+# MAGIC SELECT * FROM f1_demo.drivers_merge TIMESTAMP AS OF '2024-04-21T17:38:29.000+00:00';
 
 # COMMAND ----------
 
-df = spark.read.format("delta").option("timestampAsOf", '2021-06-23T15:40:33.000+0000').load("/mnt/formula1dl/demo/drivers_merge")
+df = spark.read.format("delta").option("timestampAsOf", '2024-04-21T17:38:29.000+00:00').load("/mnt/formula1dlnt/demo/drivers_merge")
 
 # COMMAND ----------
 
@@ -328,24 +328,29 @@ display(df)
 
 # COMMAND ----------
 
-# MAGIC %sql
-# MAGIC VACUUM f1_demo.drivers_merge
+# %sql
+# VACUUM f1_demo.drivers_merge
 
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC SELECT * FROM f1_demo.drivers_merge TIMESTAMP AS OF '2021-06-23T15:40:33.000+0000';
+# MAGIC SELECT * FROM f1_demo.drivers_merge TIMESTAMP AS OF '2024-04-21T17:38:29.000+00:00';
+
+# COMMAND ----------
+
+# %sql
+# VACUUM f1_demo.drivers_merge RETAIN 0 HOURS
+
+# COMMAND ----------
+
+# %sql
+# SET spark.databricks.delta.retentionDurationCheck.enabled = false;
+# VACUUM f1_demo.drivers_merge RETAIN 0 HOURS
 
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC SET spark.databricks.delta.retentionDurationCheck.enabled = false;
-# MAGIC VACUUM f1_demo.drivers_merge RETAIN 0 HOURS
-
-# COMMAND ----------
-
-# MAGIC %sql
-# MAGIC SELECT * FROM f1_demo.drivers_merge TIMESTAMP AS OF '2021-06-23T15:40:33.000+0000';
+# MAGIC SELECT * FROM f1_demo.drivers_merge TIMESTAMP AS OF '2024-04-21T17:38:29.000+00:00';
 
 # COMMAND ----------
 
@@ -365,13 +370,18 @@ display(df)
 # COMMAND ----------
 
 # MAGIC %sql 
-# MAGIC SELECT * FROM f1_demo.drivers_merge VERSION AS OF 3;
+# MAGIC SELECT * FROM f1_demo.drivers_merge;
+
+# COMMAND ----------
+
+# MAGIC %sql 
+# MAGIC SELECT * FROM f1_demo.drivers_merge VERSION AS OF 11;
 
 # COMMAND ----------
 
 # MAGIC %sql
 # MAGIC MERGE INTO f1_demo.drivers_merge tgt
-# MAGIC USING f1_demo.drivers_merge VERSION AS OF 3 src
+# MAGIC USING f1_demo.drivers_merge VERSION AS OF 11 src
 # MAGIC    ON (tgt.driverId = src.driverId)
 # MAGIC WHEN NOT MATCHED THEN
 # MAGIC    INSERT *
@@ -383,7 +393,9 @@ display(df)
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC SELECT * FROM f1_demo.drivers_merge
+# MAGIC SELECT *
+# MAGIC FROM f1_demo.drivers_merge
+# MAGIC ORDER BY driverId ASC
 
 # COMMAND ----------
 
@@ -393,15 +405,39 @@ display(df)
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC CREATE TABLE IF NOT EXISTS f1_demo.drivers_txn (
-# MAGIC driverId INT,
-# MAGIC dob DATE,
-# MAGIC forename STRING, 
-# MAGIC surname STRING,
-# MAGIC createdDate DATE, 
-# MAGIC updatedDate DATE
+# MAGIC CREATE TABLE IF NOT EXISTS f1_demo.TEST (
+# MAGIC   driverId INT,
+# MAGIC   dob DATE,
+# MAGIC   forename STRING, 
+# MAGIC   surname STRING,
+# MAGIC   createdDate DATE, 
+# MAGIC   updatedDate DATE
 # MAGIC )
 # MAGIC USING DELTA
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC DESCRIBE EXTENDED f1_demo.TEST
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC DESCRIBE EXTENDED f1_demo.drivers_txn
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC CREATE TABLE IF NOT EXISTS f1_demo.drivers_txn (
+# MAGIC   driverId INT,
+# MAGIC   dob DATE,
+# MAGIC   forename STRING, 
+# MAGIC   surname STRING,
+# MAGIC   createdDate DATE, 
+# MAGIC   updatedDate DATE
+# MAGIC )
+# MAGIC USING DELTA
+# MAGIC LOCATION 'abfss://demo@formula1dlnt.dfs.core.windows.net/drivers_txn'
 
 # COMMAND ----------
 
@@ -436,9 +472,11 @@ display(df)
 # COMMAND ----------
 
 for driver_id in range(3, 20):
-  spark.sql(f"""INSERT INTO f1_demo.drivers_txn
-                SELECT * FROM f1_demo.drivers_merge
-                WHERE driverId = {driver_id}""")
+  spark.sql(f"""
+    INSERT INTO f1_demo.drivers_txn
+    SELECT * FROM f1_demo.drivers_merge
+    WHERE driverId = {driver_id}
+""")
 
 # COMMAND ----------
 
@@ -455,20 +493,26 @@ for driver_id in range(3, 20):
 
 # MAGIC %sql
 # MAGIC CREATE TABLE IF NOT EXISTS f1_demo.drivers_convert_to_delta (
-# MAGIC driverId INT,
-# MAGIC dob DATE,
-# MAGIC forename STRING, 
-# MAGIC surname STRING,
-# MAGIC createdDate DATE, 
-# MAGIC updatedDate DATE
+# MAGIC   driverId INT,
+# MAGIC   dob DATE,
+# MAGIC   forename STRING, 
+# MAGIC   surname STRING,
+# MAGIC   createdDate DATE, 
+# MAGIC   updatedDate DATE
 # MAGIC )
 # MAGIC USING PARQUET
+# MAGIC LOCATION 'abfss://demo@formula1dlnt.dfs.core.windows.net/drivers_convert_to_delta'
 
 # COMMAND ----------
 
 # MAGIC %sql
 # MAGIC INSERT INTO f1_demo.drivers_convert_to_delta
 # MAGIC SELECT * FROM f1_demo.drivers_merge
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC SELECT * FROM f1_demo.drivers_convert_to_delta
 
 # COMMAND ----------
 
@@ -481,12 +525,12 @@ df = spark.table("f1_demo.drivers_convert_to_delta")
 
 # COMMAND ----------
 
-df.write.format("parquet").save("/mnt/formula1dl/demo/drivers_convert_to_delta_new")
+df.write.format("parquet").save("/mnt/formula1dlnt/demo/drivers_convert_to_delta_new")
 
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC CONVERT TO DELTA parquet.`/mnt/formula1dl/demo/drivers_convert_to_delta_new`
+# MAGIC CONVERT TO DELTA parquet.`/mnt/formula1dlnt/demo/drivers_convert_to_delta_new`
 
 # COMMAND ----------
 
