@@ -22,9 +22,9 @@ processed_folder_path
 # COMMAND ----------
 
 drivers_df = spark.read.format("delta").load(f"{processed_folder_path}/drivers") \
-.withColumnRenamed("number", "driver_number") \
-.withColumnRenamed("name", "driver_name") \
-.withColumnRenamed("nationality", "driver_nationality") 
+  .withColumnRenamed("number", "driver_number") \
+  .withColumnRenamed("name", "driver_name") \
+  .withColumnRenamed("nationality", "driver_nationality") 
 
 # COMMAND ----------
 

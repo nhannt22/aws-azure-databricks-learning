@@ -31,24 +31,25 @@ from pyspark.sql.types import StructType, StructField, IntegerType, StringType, 
 
 # COMMAND ----------
 
-results_schema = StructType(fields=[StructField("resultId", IntegerType(), False),
-                                    StructField("raceId", IntegerType(), True),
-                                    StructField("driverId", IntegerType(), True),
-                                    StructField("constructorId", IntegerType(), True),
-                                    StructField("number", IntegerType(), True),
-                                    StructField("grid", IntegerType(), True),
-                                    StructField("position", IntegerType(), True),
-                                    StructField("positionText", StringType(), True),
-                                    StructField("positionOrder", IntegerType(), True),
-                                    StructField("points", FloatType(), True),
-                                    StructField("laps", IntegerType(), True),
-                                    StructField("time", StringType(), True),
-                                    StructField("milliseconds", IntegerType(), True),
-                                    StructField("fastestLap", IntegerType(), True),
-                                    StructField("rank", IntegerType(), True),
-                                    StructField("fastestLapTime", StringType(), True),
-                                    StructField("fastestLapSpeed", FloatType(), True),
-                                    StructField("statusId", StringType(), True)])
+results_schema = StructType(fields=[
+  StructField("resultId", IntegerType(), False),
+  StructField("raceId", IntegerType(), True),
+  StructField("driverId", IntegerType(), True),
+  StructField("constructorId", IntegerType(), True),
+  StructField("number", IntegerType(), True),
+  StructField("grid", IntegerType(), True),
+  StructField("position", IntegerType(), True),
+  StructField("positionText", StringType(), True),
+  StructField("positionOrder", IntegerType(), True),
+  StructField("points", FloatType(), True),
+  StructField("laps", IntegerType(), True),
+  StructField("time", StringType(), True),
+  StructField("milliseconds", IntegerType(), True),
+  StructField("fastestLap", IntegerType(), True),
+  StructField("rank", IntegerType(), True),
+  StructField("fastestLapTime", StringType(), True),
+  StructField("fastestLapSpeed", FloatType(), True),
+  StructField("statusId", StringType(), True)])
 
 # COMMAND ----------
 
@@ -163,6 +164,9 @@ processed_folder_path = 'abfss://processed@formula1dlnt.dfs.core.windows.net'
 # COMMAND ----------
 
 merge_condition = "tgt.result_id = src.result_id AND tgt.race_id = src.race_id"
+
+# COMMAND ----------
+
 merge_delta_data(results_deduped_df, 'f1_processed', 'results', processed_folder_path, merge_condition, 'race_id')
 
 # COMMAND ----------
@@ -173,7 +177,7 @@ dbutils.notebook.exit("Success")
 
 # MAGIC %sql
 # MAGIC SELECT COUNT(1)
-# MAGIC   FROM f1_processed.results;
+# MAGIC FROM f1_processed.results;
 
 # COMMAND ----------
 

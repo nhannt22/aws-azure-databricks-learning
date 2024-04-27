@@ -31,23 +31,24 @@ from pyspark.sql.types import StructType, StructField, IntegerType, StringType, 
 
 # COMMAND ----------
 
-circuits_schema = StructType(fields=[StructField("circuitId", IntegerType(), False),
-                                     StructField("circuitRef", StringType(), True),
-                                     StructField("name", StringType(), True),
-                                     StructField("location", StringType(), True),
-                                     StructField("country", StringType(), True),
-                                     StructField("lat", DoubleType(), True),
-                                     StructField("lng", DoubleType(), True),
-                                     StructField("alt", IntegerType(), True),
-                                     StructField("url", StringType(), True)
+circuits_schema = StructType(fields=[
+  StructField("circuitId", IntegerType(), False),
+  StructField("circuitRef", StringType(), True),
+  StructField("name", StringType(), True),
+  StructField("location", StringType(), True),
+  StructField("country", StringType(), True),
+  StructField("lat", DoubleType(), True),
+  StructField("lng", DoubleType(), True),
+  StructField("alt", IntegerType(), True),
+  StructField("url", StringType(), True)
 ])
 
 # COMMAND ----------
 
 circuits_df = spark.read \
-.option("header", True) \
-.schema(circuits_schema) \
-.csv(f"{raw_folder_path}/{v_file_date}/circuits.csv")
+  .option("header", True) \
+  .schema(circuits_schema) \
+  .csv(f"{raw_folder_path}/{v_file_date}/circuits.csv")
 
 # COMMAND ----------
 
